@@ -21,7 +21,8 @@
 
 int main(int argc, char *argv[]){
 	int fd_in_url;
-	int i, j=1, k;
+	int i, j=1, k=0, m=0;
+	int pidproc;
 	char *buf_cont_file;
 	char *aux;
 
@@ -39,17 +40,26 @@ int main(int argc, char *argv[]){
 	}
 
 	for(i=0;i<strlen(buf_cont_file);i++){
-		while(buf_cont_file[k]!='\n'){
-			printf("%c",buf_cont_file[k]);
-			k++;
-		}
+		for(; buf_cont_file[k]!='\n'; k++){}
+		if((strlen(buf_cont_file))==i+1) break;
 		if(buf_cont_file[i]=='\n'){
-			printf(" Linha %d\n", j), j++;
+			aux=strndup(buf_cont_file+m, k);
+			if((pidproc=fork())<0){
+				printf("Erro: %s\n", strerror(errno));
+				exit(1);
+			}
+			if(!pidproc){
+				if((execlp("xine", "xine", NULL))==-1){
+					printf("Erro: %s\n", strerror(errno));
+					exit(1);
+				}
+				exit(0);
+			}
+			printf("%s", aux);
+			m=k;
 			k++;
 		}
 	}
-
 	free(buf_cont_file);
-
 	return 0;
 }
